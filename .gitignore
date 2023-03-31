@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# datasets
+MQ2008/
+MSLR-WEB10K/
