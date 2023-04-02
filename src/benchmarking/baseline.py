@@ -9,19 +9,19 @@ from models import *
 from utils import read_dataset
 from sklearn.model_selection import ParameterGrid
 
-
 RANDOM_SEED = 0
 
-
-def argmin(fn, space):
+def run_grid_search(objective, param_space):
+    """Assess the performance on every combination of parameters supplied from a JSON file.
+    """
     best_score = np.NINF
     best_params = {}
 
-    for params in ParameterGrid(space):
+    for params in ParameterGrid(param_space):
         try:
-            score = fn(params)
+            score = objective(params)
         except Exception as e:
-            print('Exception during training: ' + repr(e))
+            print(f"Exception during training: {repr(e)}")
             continue
 
         if score > best_score:
@@ -32,19 +32,29 @@ def argmin(fn, space):
 
 
 def _params_to_str(params):
-    return ''.join(map(lambda t: '{}[{}]'.format(t[0], str(t[1])), params.items()))
+    """Parse the parameters into a more human-friendly format.
+    """
+    return '--'.join(map(lambda t: '{}[{}]'.format(t[0], str(t[1])), params.items()))
 
 
-def eval_params(ranker_name, RankerType, data, static_params, param_space, log_file, out_file):
+def run_training(ranker_name, ranker_type, data, static_params, param_space, log_file, out_file):
+    """Execute the complete evaluation sequence.
+    """
+
+    # Initialize the log file in case it does not exist
     if not os.path.exists(log_file):
         with open(log_file, 'w') as f:
             json.dump({}, f)
 
     def objective(params):
+        """Execute the training sequence for a single model and store its hyper-parameters into the log file.
+        """
+        # Combine static hyper-parameters (number of iterations) with user-specified hyper-parameters
         ranker_params = deepcopy(static_params)
         ranker_params.update(params)
-        print('Fit with params: ' + _params_to_str(ranker_params))
+        print(f"Fit with params: {_params_to_str(ranker_params)}")
 
+        # Add a new entry to the log file
         with open(log_file, 'r') as f:
             log = json.load(f)
             if ranker_name not in log:
@@ -54,43 +64,42 @@ def eval_params(ranker_name, RankerType, data, static_params, param_space, log_f
                 print('Return result from cache')
                 return max(log[ranker_name][params_str]['ndcg'])
 
-        ranker = RankerType(ranker_params)
+        # In our case this is actually always LightGBMRanker
+        ranker = ranker_type(ranker_params)
 
+        # Execute the training sequence
+        print("Starting the training")
         start = datetime.datetime.now()
-
         ranker.fit(data)
 
         train_time = datetime.datetime.now() - start
         train_time = train_time.total_seconds()
 
+        # Evaluate the final score
+        # TODO: Update to take all of our metrics into consideration
         eval_log = ranker.eval_ndcg(data)
 
         log[ranker_name][params_str] = {
             'time': train_time,
             'ndcg': eval_log
         }
-        dump = log_file + '.dmp'
 
+        dump = log_file + '.dmp'
         with open(dump, 'w') as f:
             json.dump(log, f, indent=4, sort_keys=True)
-
         os.rename(dump, log_file)
 
         return max(eval_log)
 
-    best_params = argmin(fn=objective, space=param_space)
-
+    best_params = run_grid_search(objective=objective, param_space=param_space)
     print('Best params:' + str(best_params))
 
+    # Save the hyper-parameters of the best model found
     with open(out_file, 'w') as f:
         json.dump(best_params, f, indent=4, sort_keys=True)
 
+    # TODO: Optimize for NDCG@5
     return best_params
-
-
-def print_versions():
-    import lightgbm
-    print('LightGBM: ' + lightgbm.__version__)
 
 
 # TODO: Adapt the arguments
@@ -101,23 +110,28 @@ if __name__ == "__main__":
     }
 
     parser = argparse.ArgumentParser()
+    # One of the models defined above
     parser.add_argument('--learner', choices=rankers.keys(), required=True)
     # For example "MQ2008/Fold1"
     parser.add_argument('--fold', required=True)
-    # parser.add_argument('-s', '--param-space', required=True)
-    # parser.add_argument('-o', '--out-file', required=True)
-    # parser.add_argument('-l', '--log-file', required=True)
+
+    parser.add_argument('-s', '--param-space', required=True)
+    parser.add_argument('-o', '--out-file', required=True)
+    parser.add_argument('-l', '--log-file', required=True)
+
     parser.add_argument('-n', '--iterations', type=int, default=10000)
-    parser.add_argument('--use-gpu', action='store_true')
     args = parser.parse_args()
 
-    print_versions()
+    train_path = "/".join(["../../data/parsed", args.fold, "train.csv"])
+    test_path = "/".join(["../../data/parsed", args.fold, "test.csv"])
+    validation_path = "/".join(["../../data/parsed", args.fold, "vali.csv"])
 
-    train_path = "/".join(["../../data/parsed", args.fold, "train.txt"])
-    test_path = "/".join(["../../data/parsed", args.fold, "test.txt"])
-    validation_path = "/".join(["../../data/parsed", args.fold, "vali.txt"])
+    # DEBUG
+    # train_path = "/".join(["data/parsed", args.fold, "train.csv"])
+    # test_path = "/".join(["data/parsed", args.fold, "test.csv"])
+    # validation_path = "/".join(["data/parsed", args.fold, "vali.csv"])
 
-    RankerType = rankers[args.learner][0]
+    ranker_type = rankers[args.learner][0]
     loss_function = rankers[args.learner][1]
 
     static_params = {
@@ -126,19 +140,15 @@ if __name__ == "__main__":
         'random_seed': RANDOM_SEED
     }
 
-    if args.use_gpu:
-        static_params['device'] = 'gpu'
-        static_params['gpu_device_id'] = 0
-
     static_params['iterations'] = args.iterations
 
-    # with open(args.param_space) as f:
-    #     param_space = json.load(f)
+    with open(args.param_space) as f:
+        param_space = json.load(f)
 
     train = read_dataset(train_path)
     test = read_dataset(test_path)
     validation = read_dataset(validation_path)
     data = Data(train, test, validation)
 
-    result = eval_params(args.learner, RankerType, data, static_params, param_space, args.log_file, args.out_file)
-    print('NDCG best value: ' + str(result))
+    result = run_training(args.learner, ranker_type, data, static_params, param_space, args.log_file, args.out_file)
+    print(f"NDCG best value: {str(result)}")

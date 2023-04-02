@@ -18,7 +18,7 @@ def dump_to_file(path, name, X, y, queries):
     pd.DataFrame(all).sort_values(by=[1]).to_csv("\\".join([path, name]), sep=',', header=False, index=False)
 
 
-def parse_dataset(src_path, dst_path, name):
+def parse_dataset(src_path, dst_path):
     train_file = os.path.join(src_path, "train.txt")
     validation_file = os.path.join(src_path, "vali.txt")
     test_file = os.path.join(src_path, "test.txt")
@@ -32,6 +32,7 @@ def parse_dataset(src_path, dst_path, name):
     X, y, queries = process_libsvm_file(test_file)
     dump_to_file(dst_path, "test.csv", X, y, queries)
 
+
 # Process all datasets to a format accepted in the rest of the framework
 if __name__ == "__main__":
     datasets = ["MQ2008", "MSLR-WEB10K"]
@@ -42,4 +43,4 @@ if __name__ == "__main__":
         for fold in folds:
             src_path = "\\".join([data_path, dataset, fold])
             dst_path = "\\".join([data_path, "parsed", dataset, fold])
-            parse_dataset(src_path, dst_path, dataset)
+            parse_dataset(src_path, dst_path)

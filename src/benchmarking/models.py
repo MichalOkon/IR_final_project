@@ -1,5 +1,5 @@
 from collections import Counter
-from utils import mean_ndcg
+from metrics import mean_ndcg
 import lightgbm as lgb
 
 
@@ -9,10 +9,12 @@ class Data:
         self.y_train = train[1]
         self.queries_train = train[2]
 
+        print(validation)
         self.X_validation = validation[0]
         self.y_validation = validation[1]
         self.queries_validation = validation[2]
 
+        print(test)
         self.X_test = test[0]
         self.y_test = test[1]
         self.queries_test = test[2]
@@ -20,7 +22,7 @@ class Data:
 
         group_train = Counter(self.queries_train).values()
         group_validation = Counter(self.queries_validation).values()
-
+        
         self.train_pool = lgb.Dataset(self.X_train, self.y_train, group=group_train)
         self.validation_pool = lgb.Dataset(self.X_validation, self.y_validation, group=group_validation)
 
@@ -38,10 +40,10 @@ class Ranker:
         return eval_log
 
     def fit(self, train):
-        raise Exception('call of interface function')
+        raise Exception('Call of interface function')
 
     def staged_predict(self, data, eval_period):
-        raise Exception('call of interface function')
+        raise Exception('Call of interface function')
 
 
 class LightGBMRanker(Ranker):
@@ -56,10 +58,11 @@ class LightGBMRanker(Ranker):
 
     # Here feval parameter will include the custom evaluation function
     def fit(self, data):
+        print(data.train_pool)
         self.model = lgb.train(
             params=self.params,
             train_set=data.train_pool,
-            valid_set=data.validatioon_pool,
+            valid_sets=data.validation_pool,
             num_boost_round=self.iterations
         )
 

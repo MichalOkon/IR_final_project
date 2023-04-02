@@ -131,3 +131,9 @@ dmypy.json
 # datasets
 MQ2008/
 MSLR-WEB10K/
+log*
+out*
+
+# IDE
+.vscode/
+
