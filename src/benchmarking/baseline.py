@@ -9,7 +9,7 @@ from models import *
 from utils import read_dataset
 from sklearn.model_selection import ParameterGrid
 
-RANDOM_SEED = 0
+RANDOM_SEED = 42
 
 def run_grid_search(objective, param_space):
     """Assess the performance on every combination of parameters supplied from a JSON file.
@@ -18,11 +18,8 @@ def run_grid_search(objective, param_space):
     best_params = {}
 
     for params in ParameterGrid(param_space):
-        try:
-            score = objective(params)
-        except Exception as e:
-            print(f"Exception during training: {repr(e)}")
-            continue
+        # Ideally this should be a try-catch
+        score = objective(params)
 
         if score > best_score:
             best_score = score
@@ -73,21 +70,22 @@ def run_training(ranker_name, ranker_type, data, static_params, param_space, log
         ranker.fit(data)
 
         train_time = datetime.datetime.now() - start
-        train_time = train_time.total_seconds()
+        train_time = train_time.total_seconds() * 1000
 
         # Evaluate the final score
         # TODO: Update to take all of our metrics into consideration
         eval_log = ranker.eval_ndcg(data)
 
         log[ranker_name][params_str] = {
-            'time': train_time,
+            'training_time_ms': train_time,
+            'epochs_till_convergence': ranker.n_iter_,
             'ndcg': eval_log
         }
 
         dump = log_file + '.dmp'
         with open(dump, 'w') as f:
             json.dump(log, f, indent=4, sort_keys=True)
-        os.rename(dump, log_file)
+        os.replace(dump, log_file)
 
         return max(eval_log)
 
@@ -98,7 +96,6 @@ def run_training(ranker_name, ranker_type, data, static_params, param_space, log
     with open(out_file, 'w') as f:
         json.dump(best_params, f, indent=4, sort_keys=True)
 
-    # TODO: Optimize for NDCG@5
     return best_params
 
 
@@ -135,7 +132,7 @@ if __name__ == "__main__":
     loss_function = rankers[args.learner][1]
 
     static_params = {
-        'verbose': 0,
+        'verbose': 1,
         'boosting_type': 'gbdt',
         'random_seed': RANDOM_SEED
     }

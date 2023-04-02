@@ -47,21 +47,18 @@ class LightGBMRanker(Ranker):
     def __init__(self, params):
         self.params = params
 
-        self.params['num_leaves'] = 2 ** self.params['max_depth']
-        del self.params['max_depth']
-
         self.iterations = self.params['iterations']
         del self.params['iterations']
 
     # Here feval parameter will include the custom evaluation function
     def fit(self, data):
-        print(data.train_pool)
         self.model = lgb.train(
             params=self.params,
             train_set=data.train_pool,
             valid_sets=data.validation_pool,
             num_boost_round=self.iterations
         )
+        self.n_iter_ = self.model.current_iteration()
 
     def staged_predict(self, data, eval_period):
         staged_predictions = []
