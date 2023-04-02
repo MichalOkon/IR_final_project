@@ -12,15 +12,14 @@ def doc_comparator(doc1, doc2):
 def cumulative_gain(relevances):
     return np.sum((2 ** relevances - 1) / np.log2(np.arange(relevances.shape[0]) + 2))
 
-
-def ndcg(y_pred, y_true, top):
+def ndcg_score(y_pred, y_true, k):
     assert y_pred.shape[0] == y_true.shape[0]
-    top = min(top, y_pred.shape[0])
+    k = min(k, y_pred.shape[0])
 
     first_k_docs = sorted(zip(y_true, y_pred), key=cmp_to_key(doc_comparator))
-    first_k_docs = np.array(first_k_docs)[:top,0]
+    first_k_docs = np.array(first_k_docs)[:k,0]
 
-    top_k_idxs = np.argsort(y_true)[::-1][:top]
+    top_k_idxs = np.argsort(y_true)[::-1][:k]
     top_k_docs = y_true[top_k_idxs]
 
     dcg = cumulative_gain(first_k_docs)
@@ -28,14 +27,14 @@ def ndcg(y_pred, y_true, top):
 
     return dcg / idcg if idcg > 0 else 1.
 
+def mrr_score(y_pred, y_true):
+    return -1
 
-def mean_ndcg(y_pred, y_true, query_idxs, top=10):
-    sum_ndcg = 0
-    queries = np.unique(query_idxs)
+def precision_score(y_pred, y_true, k):
+    return -1
 
-    for query in queries:
-        idxs = query_idxs == query
-        value = ndcg(y_pred[idxs], y_true[idxs], top)
-        sum_ndcg += value
+def recall_score(y_pred, y_true, k):
+    return -1
 
-    return sum_ndcg / float(queries.shape[0])
+def rmse_score(y_pred, y_true):
+    return -1
