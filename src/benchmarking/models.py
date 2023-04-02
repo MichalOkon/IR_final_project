@@ -9,20 +9,17 @@ class Data:
         self.y_train = train[1]
         self.queries_train = train[2]
 
-        print(validation)
         self.X_validation = validation[0]
         self.y_validation = validation[1]
         self.queries_validation = validation[2]
 
-        print(test)
         self.X_test = test[0]
         self.y_test = test[1]
         self.queries_test = test[2]
-        self.group_test = Counter(self.queries_test).values()
+        self.group_test = list(Counter(self.queries_test).values())
 
-        group_train = Counter(self.queries_train).values()
-        group_validation = Counter(self.queries_validation).values()
-        
+        group_train = list(Counter(self.queries_train).values())
+        group_validation = list(Counter(self.queries_validation).values())
         self.train_pool = lgb.Dataset(self.X_train, self.y_train, group=group_train)
         self.validation_pool = lgb.Dataset(self.X_validation, self.y_validation, group=group_validation)
 
