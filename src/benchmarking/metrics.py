@@ -46,8 +46,11 @@ def ndcg_score(y_pred, y_true, query_indices, k=10):
 
 ### MRR EVALUATION ###
 
-def mrr(y_pred, y_true, min_relevant_rank, k):
-    k = min(k, y_pred.shape[0])
+def mrr(y_pred, y_true, min_relevant_rank, k=None):
+    if k is None:
+        k = y_pred.shape[0]
+    else:
+        k = min(k, y_pred.shape[0])
     first_k_docs = _get_first_k_documents(y_pred, y_true, k)
 
     for idx, rel in enumerate(first_k_docs):
@@ -56,13 +59,12 @@ def mrr(y_pred, y_true, min_relevant_rank, k):
     
     return 0.0
 
-def mrr_score(y_pred, y_true, query_indices, min_relevant_rank=2):
+def mrr_score(y_pred, y_true, query_indices, min_relevant_rank=2, k = None,):
     queries = np.unique(query_indices)
     sum_mrr = 0
 
     for query in queries:
         idxs = query_indices == query
-        k = len(y_true[idxs])
         sum_mrr += mrr(y_pred[idxs], y_true[idxs], min_relevant_rank, k)
 
     return sum_mrr / float(queries.shape[0])

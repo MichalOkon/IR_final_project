@@ -26,6 +26,13 @@ def test_mrr_score():
 
     np.testing.assert_almost_equal(mrr, 0.500, decimal=3)
 
+def test_mrr_simple_2():
+    y_pred = np.array([0.5, 0.2])
+    y_true = np.array([0.0, 1.0])
+    queries = np.array([1, 1])
+    result = mrr_score(y_pred, y_true, queries, min_relevant_rank=1)
+
+    assert result == 0.5
 ### TEST PRECISION ###
 
 def test_precision_score():
