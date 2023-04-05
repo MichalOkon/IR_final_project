@@ -1,0 +1,18 @@
+MQ2008 feature(s), MSLR feature(s)
+https://www.microsoft.com/en-us/research/project/mslr/, https://arxiv.org/ftp/arxiv/papers/1306/1306.2597.pdf
+1-5, 6-10
+6-10, 16-20
+11-15, 71-75
+16-20, 46-50 or 11-15
+21-25, 106-110
+26-30, 111-115
+31-35, 116-120
+36-40, 121-125
+41, 130
+42, 128
+43, 129
+44, 126
+45, 127
+46, -
+
+
