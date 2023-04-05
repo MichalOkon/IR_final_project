@@ -143,10 +143,11 @@ def rmse(y_pred, y_true, max_relevance, k):
     first_k_docs = sorted(zip(y_true, y_pred), key=cmp_to_key(doc_comparator))[:k]
     
     error = 0
+    errors = []
     for result in first_k_docs:
+        errors.append((result[0] - max_relevance * result[1]) ** 2)
         error += (result[0] - max_relevance * result[1]) ** 2
-    
-    return error ** (1 / 2)
+    return (error/len(y_pred)) ** 0.5
 
 def rmse_score(y_pred, y_true, query_indices, k=10, max_relevance=2.0):
     queries = np.unique(query_indices)
@@ -157,4 +158,4 @@ def rmse_score(y_pred, y_true, query_indices, k=10, max_relevance=2.0):
         value = rmse(y_pred[idxs], y_true[idxs], max_relevance, k)
         mse += value
 
-    return mse / float(queries.shape[0])
+    return mse/len(queries)

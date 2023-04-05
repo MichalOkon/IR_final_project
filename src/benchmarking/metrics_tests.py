@@ -73,13 +73,13 @@ def test_recall_score():
 
 def test_rmse_score():
     y_pred, y_true, queries = get_example_data()
-    # For query 1: ((2 - 2 * 0.9)^2 + (0 - 2 * 0.85)^2 + (2 - 2 * 0.71)^2 + (1 - 2 * 0.63)^2)^(1/2) = 1.826
-    # For query 2: ((0 - 2 * 0.87)^2 + (2 - 2 * 0.76)^2 + (1 - 2 * 0.64)^2 + (0 - 2 * 0.26)^2)^(1/2) = 1.899
-    # For query 3: ((1 - 2 * 0.7)^2 + (1 - 2 * 0.65)^2 + (0 - 2 * 0.32)^2 + (0 - 2 * 0.1)^2)^(1/2) = 0.836
-    # Expected: 1.520
+    # For query 1: (((2 - 2 * 0.9)^2 + (0 - 2 * 0.85)^2 + (2 - 2 * 0.71)^2 + (1 - 2 * 0.63)^2)/4)^(1/2) = 0.913
+    # For query 2: (((0 - 2 * 0.87)^2 + (2 - 2 * 0.76)^2 + (1 - 2 * 0.64)^2 + (0 - 2 * 0.26)^2)/4)^(1/2) = 0.9495
+    # For query 3: (((1 - 2 * 0.7)^2 + (1 - 2 * 0.65)^2 + (0 - 2 * 0.32)^2 + (0 - 2 * 0.1)^2)/4)^(1/2) = 0.418
+    # Expected: 0.76
     rmse = rmse_score(y_pred, y_true, queries, max_relevance=2)
 
-    np.testing.assert_almost_equal(rmse, 1.520, decimal=3)
+    np.testing.assert_almost_equal(rmse, 0.76, decimal=3)
 
 ### TEST MAP ###
 
