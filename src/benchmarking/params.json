@@ -1,0 +1,9 @@
+{
+    "max_depth": [10],
+    "num_leaves": [30],
+    "learning_rate": [0.005],
+    "early_stopping_round": [100],
+    "first_metric_only": [true],
+    "metric": ["ndcg"],
+    "eval_at": [[5]]
+}
