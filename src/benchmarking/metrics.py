@@ -56,13 +56,13 @@ def mrr(y_pred, y_true, min_relevant_rank, k):
     
     return 0.0
 
-def mrr_score(y_pred, y_true, query_indices, k=10):
-    min_relevant_rank = 2.0
+def mrr_score(y_pred, y_true, query_indices, min_relevant_rank=2):
     queries = np.unique(query_indices)
     sum_mrr = 0
 
     for query in queries:
         idxs = query_indices == query
+        k = len(y_true[idxs])
         sum_mrr += mrr(y_pred[idxs], y_true[idxs], min_relevant_rank, k)
 
     return sum_mrr / float(queries.shape[0])
@@ -85,20 +85,39 @@ def precision_score(y_pred, y_true, query_indices, k=10, min_relevant_rank=2):
 
     return sum_precision / float(queries.shape[0])
 
-def map_score(y_pred, y_true, query_indices):
-    max_k = y_pred.shape[0]
+def map_score(y_pred, y_true, query_indices, min_relevant_rank=2):
+    queries = np.unique(query_indices)
     result = 0
 
-    for k in range(1, max_k + 1):
-        result += precision_score(y_pred, y_true, query_indices, k)
-    
-    return result / max_k
+    for query in queries:
+        idxs = query_indices == query
+        max_k = np.count_nonzero(idxs)
+
+        current_sum = 0
+        correct_predictions = 0
+
+        for k in range(1, max_k + 1):
+            # Calculate precision at current value of k
+            p_at_k = precision_at_k(y_pred[idxs], y_true[idxs], min_relevant_rank, k)
+            # If document at k is relevant
+            if int(y_true[idxs][k - 1]) >= min_relevant_rank:
+                # Increase the running sum by the value of precision at current k
+                current_sum += p_at_k
+                correct_predictions += 1
+
+        # In division-by-zero scenario divide by 1 which gives a result of 0 either way
+        correct_predictions = max(correct_predictions, 1)
+        result += (current_sum / correct_predictions)
+
+    # Calculate average over all queries
+    return result / len(queries)
 
 ### RECALL EVALUATION ###
 
 def recall_at_k(y_pred, y_true, min_relevant_rank, k):
     k = min(k, y_pred.shape[0])
     first_k_docs = _get_first_k_documents(y_pred, y_true, k)
+    # Return 1 if no relevant documents exist so that the metric is equal to 0
     relevant = max((y_true >= min_relevant_rank).sum(), 1)
     relevant_retrieved = (first_k_docs >= min_relevant_rank).sum()
 
@@ -111,7 +130,6 @@ def recall_score(y_pred, y_true, query_indices, k=10, min_relevant_rank=2):
     for query in queries:
         idxs = query_indices == query
         value = recall_at_k(y_pred[idxs], y_true[idxs], min_relevant_rank, k)
-        print(value)
         sum_recall += value
 
     return sum_recall / float(queries.shape[0])
@@ -128,8 +146,7 @@ def rmse(y_pred, y_true, max_relevance, k):
     
     return error ** (1 / 2)
 
-def rmse_score(y_pred, y_true, query_indices, k=10):
-    max_relevance = 2.0
+def rmse_score(y_pred, y_true, query_indices, k=10, max_relevance=2.0):
     queries = np.unique(query_indices)
     mse = 0
 
