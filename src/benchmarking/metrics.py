@@ -32,6 +32,9 @@ def ndcg(y_pred, y_true, k):
     dcg = cumulative_gain(first_k_docs)
     idcg = cumulative_gain(top_k_docs)
 
+    if dcg == 0:
+        return 0
+
     return dcg / idcg if idcg > 0 else 1.
 
 def ndcg_score(y_pred, y_true, query_indices, k=10):
@@ -143,9 +146,7 @@ def rmse(y_pred, y_true, max_relevance, k):
     first_k_docs = sorted(zip(y_true, y_pred), key=cmp_to_key(doc_comparator))[:k]
     
     error = 0
-    errors = []
     for result in first_k_docs:
-        errors.append((result[0] - max_relevance * result[1]) ** 2)
         error += (result[0] - max_relevance * result[1]) ** 2
     return (error/len(y_pred)) ** 0.5
 
