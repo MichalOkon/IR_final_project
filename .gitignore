@@ -134,3 +134,7 @@ MSLR-WEB10K/
 
 # outfiles
 *.out.*
+log*
+
+# IDE
+.vscode/
