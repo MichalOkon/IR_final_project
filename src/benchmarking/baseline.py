@@ -34,7 +34,7 @@ def _params_to_str(params):
     return "--".join(map(lambda t: "{}[{}]".format(t[0], str(t[1])), params.items()))
 
 
-def run_training(ranker_name, ranker_type, data, static_params, param_space, log_file, out_file):
+def run_training(ranker_name, ranker_type, data, static_params, param_space, fold, log_file, out_file):
     """Execute the complete evaluation sequence.
     """
 
@@ -57,9 +57,9 @@ def run_training(ranker_name, ranker_type, data, static_params, param_space, log
             if ranker_name not in log:
                 log[ranker_name] = {}
             params_str = _params_to_str(params)
-            if params_str in log[ranker_name]:
-                print("Return result from cache")
-                return log[ranker_name][params_str]["ndcg"]
+            # if params_str in log[ranker_name]:
+            #     print("Return result from cache")
+            #     return log[ranker_name][params_str][fold]["scores"]["ndcg"]
 
         # In our case this is actually always LightGBMRanker
         ranker = ranker_type(ranker_params)
@@ -76,9 +76,11 @@ def run_training(ranker_name, ranker_type, data, static_params, param_space, log
         evaluations = ranker.evaluate(data)
 
         log[ranker_name][params_str] = {
-            "training_time_ms": train_time,
-            "epochs_till_convergence": ranker.n_iter_,
-            "scores": evaluations
+            fold: {
+                "training_time_ms": train_time,
+                "epochs_till_convergence": ranker.n_iter_,
+                "scores": evaluations
+            }
         }
 
         dump = log_file + ".dmp"
@@ -127,7 +129,7 @@ if __name__ == "__main__":
     loss_function = rankers[args.learner][1]
 
     static_params = {
-        "verbose": 1,
+        "verbose_eval": 0,
         "boosting_type": "gbdt",
         "random_seed": RANDOM_SEED
     }
@@ -142,5 +144,5 @@ if __name__ == "__main__":
     validation = read_dataset(validation_path)
     data = Data(train, test, validation)
 
-    result = run_training(args.learner, ranker_type, data, static_params, param_space, args.log_file, args.out_file)
+    result = run_training(args.learner, ranker_type, data, static_params, param_space, args.fold, args.log_file, args.out_file)
     print(f"NDCG best value: {str(result)}")

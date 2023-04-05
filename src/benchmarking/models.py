@@ -1,5 +1,5 @@
 from collections import Counter
-from metrics import ndcg_score, mrr_score, precision_score, recall_score, rmse_score
+from metrics import ndcg_score, mrr_score, precision_score, recall_score, rmse_score, map_score
 import lightgbm as lgb
 
 
@@ -27,17 +27,22 @@ class Data:
 class Ranker:
     def evaluate(self, data):
         predictions = self.model.predict(data.X_test, group=data.group_test)
-        # TODO: Update to include all of our metrics
+        print(predictions, len(predictions))
+        print("here")
+        print(data.y_test, len(data.y_test))
+        print("now here")
+        print(data.queries_test, len(data.queries_test))
         return {
-            "ndcg": ndcg_score(data.y_test, predictions, len(data.y_test)),
-            "mrr": mrr_score(data.y_test, predictions),
-            "precision_at_1": precision_score(data.y_test, predictions, 1),
-            "precision_at_5": precision_score(data.y_test, predictions, 5),
-            "precision_at_10": precision_score(data.y_test, predictions, 10), 
-            "recall_at_1": recall_score(data.y_test, predictions, 1),
-            "recall_at_5": recall_score(data.y_test, predictions, 5),
-            "recall_at_10": recall_score(data.y_test, predictions, 10),
-            "rmse": rmse_score(data.y_test, predictions)
+            "ndcg": ndcg_score(predictions, data.y_test, data.queries_test, 5),
+            "mrr": mrr_score(predictions, data.y_test, data.queries_test, len(predictions)),
+            "precision_at_1": precision_score(predictions, data.y_test, data.queries_test, 1),
+            "precision_at_5": precision_score(predictions, data.y_test, data.queries_test, 5),
+            "precision_at_10": precision_score(predictions, data.y_test, data.queries_test, 10), 
+            "recall_at_1": recall_score(predictions, data.y_test, data.queries_test, 1),
+            "recall_at_5": recall_score(predictions, data.y_test, data.queries_test, 5),
+            "recall_at_10": recall_score(predictions, data.y_test, data.queries_test, 10),
+            "rmse": rmse_score(predictions, data.y_test, data.queries_test, len(data.y_test)),
+            "map": map_score(predictions, data.y_test, data.queries_test)
         }
 
     def fit(self, train):
