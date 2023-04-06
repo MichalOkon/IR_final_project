@@ -6,13 +6,7 @@
       "activation": null,
       "dropout": 0.0
     },
-    "transformer": {
-      "N": 2,
-      "d_ff": 384,
-      "h": 1,
-      "positional_encoding" : null,
-      "dropout": 0.1
-    },
+    "transformer": false,
     "post_model": {
       "output_activation": "Tanh",
       "d_output": 1
@@ -48,6 +42,7 @@
     "mrr",
     "map",
     "ndcg",
+    "ndcg_5",
     "precision_1",
     "precision_5",
     "precision_10",
@@ -58,12 +53,8 @@
 
   ],
   "loss": {
-    "name": "approxNDCG",
+    "name": "approxNDCGLoss",
     "args": {
-      "temperature": 1.0,
-      "k": null,
-      "powered_relevancies": true,
-      "stochastic": false
     }
   },
   "detect_anomaly": false,

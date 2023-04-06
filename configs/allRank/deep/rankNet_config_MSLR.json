@@ -48,6 +48,7 @@
     "mrr",
     "map",
     "ndcg",
+    "ndcg_5",
     "precision_1",
     "precision_5",
     "precision_10",
@@ -60,10 +61,6 @@
   "loss": {
     "name": "rankNet",
     "args": {
-      "temperature": 1.0,
-      "k": null,
-      "powered_relevancies": true,
-      "stochastic": false
     }
   },
   "detect_anomaly": false,

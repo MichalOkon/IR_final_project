@@ -132,6 +132,10 @@ dmypy.json
 MQ2008/
 MSLR-WEB10K/
 
+# compressed files
+*.zip
+*.rar
+
 # outfiles
 *.out.*
 log*
